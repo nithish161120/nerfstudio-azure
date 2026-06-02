@@ -1,0 +1,31 @@
+{
+    "name": "NerfStudio on Codespaces",
+    "image": "ghcr.io/nerfstudio-project/nerfstudio:main",
+    "forwardPorts": [7007, 8888],
+    "portsAttributes": {
+        "7007": {
+            "label": "Nerfstudio Viewer",
+            "onAutoForward": "openBrowser"
+        },
+        "8888": {
+            "label": "JupyterLab",
+            "onAutoForward": "openBrowser"
+        }
+    },
+    "postStartCommand": "python3.10 -m pip install --force-reinstall --no-deps --quiet jupyterlab && echo 'Ready! Run: python3.10 -m jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --IdentityProvider.token= '",
+    "remoteEnv": {
+        "PYTHONUTF8": "1"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python3.10"
+            }
+        }
+    }
+}
