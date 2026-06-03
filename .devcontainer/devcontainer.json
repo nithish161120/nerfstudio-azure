@@ -1,25 +1,16 @@
 {
     "name": "NerfStudio on Codespaces",
-    "image": "ghcr.io/nerfstudio-project/nerfstudio:main",
-    "features": {
-        "ghcr.io/devcontainers/features/sshd:1": {
-            "version": "latest"
-        }
-    },
+    "image": "mcr.microsoft.com/devcontainers/python:3.10-bullseye",
     "forwardPorts": [7007, 8888],
     "portsAttributes": {
-        "7007": {
-            "label": "Nerfstudio Viewer",
-            "onAutoForward": "openBrowser",
-            "visibility": "public"
-        },
         "8888": {
             "label": "JupyterLab",
             "onAutoForward": "openBrowser",
             "visibility": "public"
         }
     },
-    "postStartCommand": "python3.10 -m pip install --force-reinstall --no-deps --quiet jupyterlab && nohup python3.10 -m jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --IdentityProvider.token= > /tmp/jupyter.log 2>&1 &",
+    "postCreateCommand": "pip install --quiet jupyterlab torch torchvision --index-url https://download.pytorch.org/whl/cpu && pip install --quiet nerfstudio --no-deps && pip install --quiet tyro rich jaxtyping einops",
+    "postStartCommand": "nohup jupyter-lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --IdentityProvider.token= > /tmp/jupyter.log 2>&1 &",
     "remoteEnv": {
         "PYTHONUTF8": "1"
     },
@@ -27,12 +18,8 @@
         "vscode": {
             "extensions": [
                 "ms-python.python",
-                "ms-python.vscode-pylance",
                 "ms-toolsai.jupyter"
-            ],
-            "settings": {
-                "python.defaultInterpreterPath": "/usr/bin/python3.10"
-            }
+            ]
         }
     }
 }
