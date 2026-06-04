@@ -1,0 +1,21 @@
+FROM nerfstudioacr.azurecr.io/nerfstudio:latest
+
+# Download poster dataset from nerfstudio's own CDN (not Google Drive — always works)
+# This is a real-world indoor scene with excellent 3D reconstruction quality
+RUN export PYTHONUTF8=1 && \
+    ns-download-data nerfstudio --dataset poster && \
+    echo "Dataset downloaded" && \
+    ls /root/
+
+# Pre-cache model weights with 1 training step (no viewer — exits cleanly)
+RUN export PYTHONUTF8=1 && \
+    timeout 600 ns-train nerfacto \
+        --data /root/data/nerfstudio/poster \
+        --machine.device-type cpu \
+        --max-num-iterations 1 \
+        --vis none \
+        nerfstudio-data || true && \
+    rm -rf /root/outputs
+
+# Start nerfstudio 3D viewer with the poster scene
+CMD ["/bin/bash", "-c", "export PYTHONUTF8=1 && ns-train nerfacto --data /root/data/nerfstudio/poster --machine.device-type cpu --max-num-iterations 30000 nerfstudio-data"]

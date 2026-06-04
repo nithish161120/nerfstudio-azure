@@ -22,20 +22,30 @@ import torch
 from jaxtyping import Float
 from torch import Tensor
 from torch.autograd import Function
-from torch.cuda.amp import custom_bwd, custom_fwd
+
+# torch.amp.custom_fwd/bwd were added in PyTorch 2.4.
+# Fall back to torch.cuda.amp for older versions (e.g. 2.1.x used in the container).
+try:
+    from torch.amp import custom_fwd as _amp_fwd, custom_bwd as _amp_bwd
+    _fwd_decorator = _amp_fwd(cast_inputs=torch.float32, device_type="cuda")
+    _bwd_decorator = _amp_bwd(device_type="cuda")
+except ImportError:
+    from torch.cuda.amp import custom_fwd as _cuda_fwd, custom_bwd as _cuda_bwd
+    _fwd_decorator = _cuda_fwd(cast_inputs=torch.float32)
+    _bwd_decorator = _cuda_bwd
 
 
 class _TruncExp(Function):
     # Implementation from torch-ngp:
     # https://github.com/ashawkey/torch-ngp/blob/93b08a0d4ec1cc6e69d85df7f0acdfb99603b628/activation.py
     @staticmethod
-    @custom_fwd(cast_inputs=torch.float32)
+    @_fwd_decorator
     def forward(ctx, x):
         ctx.save_for_backward(x)
         return torch.exp(x)
 
     @staticmethod
-    @custom_bwd
+    @_bwd_decorator
     def backward(ctx, g):
         x = ctx.saved_tensors[0]
         return g * torch.exp(x.clamp(-15, 15))

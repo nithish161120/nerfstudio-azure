@@ -446,7 +446,11 @@ class Viewer:
         self.original_c2w: Dict[int, np.ndarray] = {}
         image_indices = self._pick_drawn_image_idxs(len(train_dataset))
         for idx in image_indices:
-            image = train_dataset[idx]["image"]
+            try:
+                image = train_dataset[idx]["image"]
+            except (FileNotFoundError, OSError):
+                # Skip camera thumbnails when image files are unavailable locally
+                continue
             camera = train_dataset.cameras[idx]
             image_uint8 = (image * 255).detach().type(torch.uint8)
             image_uint8 = image_uint8.permute(2, 0, 1)

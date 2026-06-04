@@ -68,7 +68,15 @@ class Blender(DataParser):
             self.alpha_color_tensor = None
 
     def _generate_dataparser_outputs(self, split="train"):
-        meta = load_from_json(self.data / f"transforms_{split}.json")
+        transforms_path = self.data / f"transforms_{split}.json"
+        if not transforms_path.exists():
+            # Fall back to val, then train when the requested split file is missing
+            for fallback in ("val", "train"):
+                fallback_path = self.data / f"transforms_{fallback}.json"
+                if fallback_path.exists():
+                    transforms_path = fallback_path
+                    break
+        meta = load_from_json(transforms_path)
         image_filenames = []
         poses = []
         for frame in meta["frames"]:

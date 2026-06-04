@@ -593,7 +593,7 @@ class Cameras(TensorDataclass):
 
         # Here, we've broken our indices down along the num_cameras_batch_dims dimension allowing us to index by all
         # of our output rays at each dimension of our cameras object
-        true_indices = [camera_indices[..., i] for i in range(camera_indices.shape[-1])]
+        true_indices = tuple(camera_indices[..., i] for i in range(camera_indices.shape[-1]))
 
         # Get all our focal lengths, principal points and make sure they are the right shapes
         y = coords[..., 0]  # (num_rays,) get rid of the last dimension

@@ -118,7 +118,15 @@ class Pipeline(nn.Module):
             self.model.load_state_dict(model_state, strict=True)
         except RuntimeError:
             if not strict:
-                self.model.load_state_dict(model_state, strict=False)
+                # strict=False in PyTorch still raises on shape mismatches (only tolerates
+                # missing/unexpected keys). Filter to compatible shapes before loading so
+                # the viewer can start even when e.g. appearance embeddings differ in size.
+                current_state = self.model.state_dict()
+                compatible_state = {
+                    k: v for k, v in model_state.items()
+                    if k not in current_state or current_state[k].shape == v.shape
+                }
+                self.model.load_state_dict(compatible_state, strict=False)
             else:
                 raise
 

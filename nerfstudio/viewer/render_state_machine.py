@@ -192,11 +192,18 @@ class RenderStateMachine(threading.Thread):
                     )[0, 0, :, :, None]
                 else:
                     # Convert to z_depth if depth compositing is enabled.
-                    R = camera.camera_to_worlds[0, 0:3, 0:3].T
-                    camera_ray_bundle = camera.generate_rays(camera_indices=0, obb_box=obb)
-                    pts = camera_ray_bundle.directions * outputs["depth"]
-                    pts = (R @ (pts.view(-1, 3).T)).T.view(*camera_ray_bundle.directions.shape)
-                    outputs["gl_z_buf_depth"] = -pts[..., 2:3]  # negative z axis is the coordinate convention
+                    # Different models use different depth key names; find the best available one.
+                    depth_key = None
+                    for candidate in ("depth", "depth_fine", "depth_coarse", "expected_depth"):
+                        if candidate in outputs:
+                            depth_key = candidate
+                            break
+                    if depth_key is not None:
+                        R = camera.camera_to_worlds[0, 0:3, 0:3].T
+                        camera_ray_bundle = camera.generate_rays(camera_indices=0, obb_box=obb)
+                        pts = camera_ray_bundle.directions * outputs[depth_key]
+                        pts = (R @ (pts.view(-1, 3).T)).T.view(*camera_ray_bundle.directions.shape)
+                        outputs["gl_z_buf_depth"] = -pts[..., 2:3]  # negative z axis is the coordinate convention
         render_time = vis_t.duration
         if writer.is_initialized() and render_time != 0:
             writer.put_time(

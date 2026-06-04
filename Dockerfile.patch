@@ -1,0 +1,27 @@
+# Patch Dockerfile — layers only the fixed Python files on top of the existing pretrained image.
+# This avoids a full rebuild (which takes 2+ hours for CUDA/COLMAP compilation).
+FROM nerfstudioacr.azurecr.io/nerfstudio@sha256:47425d35ed1a7a0471e8f2c29121c86370db642a8d819f92b0e2df18d6f59e47
+
+# Overwrite only the 5 fixed source files into the installed package location.
+COPY nerfstudio/cameras/cameras.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/cameras/cameras.py
+
+COPY nerfstudio/data/dataparsers/blender_dataparser.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/data/dataparsers/blender_dataparser.py
+
+COPY nerfstudio/field_components/activations.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/field_components/activations.py
+
+COPY nerfstudio/viewer/render_state_machine.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/viewer/render_state_machine.py
+
+COPY nerfstudio/viewer/viewer_elements.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/viewer/viewer_elements.py
+
+COPY nerfstudio/utils/io.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/utils/io.py
+
+COPY nerfstudio/pipelines/base_pipeline.py \
+     /usr/local/lib/python3.10/dist-packages/nerfstudio/pipelines/base_pipeline.py
+
+COPY run_online_sample_viewer.py /app/run_online_sample_viewer.py

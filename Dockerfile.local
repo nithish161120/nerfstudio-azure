@@ -1,0 +1,30 @@
+# Dockerfile.local — packages the full local application:
+#   - All fixed nerfstudio source files (installed over the base image)
+#   - Local trained checkpoint (outputs-online-sample/)
+#   - Local dataset (data/online-poster-sample-hf/)
+#   - Viewer startup script (run_online_sample_viewer.py)
+#
+# Builds FROM the original pretrained base so CUDA/COLMAP/PyTorch are already present.
+FROM nerfstudioacr.azurecr.io/nerfstudio@sha256:47425d35ed1a7a0471e8f2c29121c86370db642a8d819f92b0e2df18d6f59e47
+
+# ── Install fixed nerfstudio source over the base installation ──────────────
+# Overwrite the installed package directory directly — faster than reinstalling
+# and avoids pip PATH issues in the slim runtime image.
+COPY nerfstudio/ /usr/local/lib/python3.10/dist-packages/nerfstudio/
+
+# ── Copy local application assets ───────────────────────────────────────────
+WORKDIR /app
+
+# Viewer startup script (with all cross-platform fixes applied)
+COPY run_online_sample_viewer.py ./run_online_sample_viewer.py
+
+# Trained nerfacto checkpoint (232 MB)
+# The viewer uses test_mode="inference" so training images are not required.
+COPY outputs-online-sample/ ./outputs-online-sample/
+
+# ── Start the viewer ────────────────────────────────────────────────────────
+# sed patches the port from 7008 → 7007 to match Azure Container App ingress.
+CMD ["/bin/bash", "-c", \
+     "export PYTHONUTF8=1 && \
+      sed -i 's/websocket_port = 7008/websocket_port = 7007/g' /app/run_online_sample_viewer.py && \
+      cd /app && python3.10 /app/run_online_sample_viewer.py"]

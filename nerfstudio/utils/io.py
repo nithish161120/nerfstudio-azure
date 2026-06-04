@@ -27,7 +27,7 @@ def load_from_json(filename: Path):
         filename: The filename to load from.
     """
     assert filename.suffix == ".json"
-    with open(filename, encoding="UTF-8") as file:
+    with open(filename, encoding="utf-8-sig") as file:
         return json.load(file)
 
 
